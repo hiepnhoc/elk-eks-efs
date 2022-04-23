@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+---
+# kind: StorageClass
+# apiVersion: storage.k8s.io/v1
+# metadata:
+#   name: elk-sc
+#   namespace: monitoring
+# provisioner: kubernetes.io/aws-ebs
+# parameters:
+#   type: gp2
+#   iopsPerGB: "10"
+#   fsType: ext4
+# ---
+# kind: PersistentVolume
+# apiVersion: v1
+# metadata:
+#   name: elk-pv-sc
+#   labels:
+#     type: sc
+# spec:
+#   capacity:
+#     storage: 5Gi
+#   accessModes:
+#     - ReadWriteOnce
+#   awsElasticBlockStore:
+#     fsType: xfs
+#     volumeID: https://ap-southeast-1.console.aws.amazon.com/ec2/v2/home?region=ap-southeast-1#VolumeDetails:volumeId=vol-094249ecaaa759c1d
+#   storageClassName: elk-sc
+# ---
+# kind: PersistentVolumeClaim
+# apiVersion: v1
+# metadata:
+#   name: elk-pvc-sc
+#   namespace: monitoring
+# spec:
+#   storageClassName: elk-sc
+#   accessModes:
+#     - ReadWriteOnce
+#   resources:
+#     requests:
+#       storage: 2Gi
+
+# kind: CSIDriver
+# apiVersion: storage.k8s.io/v1beta1
+# metadata:
+#   name: efs.csi.aws.com
+#   namespace: monitoring
+# spec:
+#   attachRequired: false
+# ---
+
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: efs-sc
+  namespace: monitoring
+provisioner: efs.csi.aws.com
+# parameters:
+#   provisioningMode: efs-ap
+#   fileSystemId: fs-0de06cef7ffd033cc
+#   directoryPerms: "700"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: efs-pv
+  namespace: monitoring
+spec:
+  capacity:
+    storage: 5Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: efs-sc
+  csi:
+    driver: efs.csi.aws.com
+    volumeHandle: fs-0de06cef7ffd033cc
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: efs-pvc
+  namespace: monitoring
+spec:
+  storageClassName: efs-sc
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
